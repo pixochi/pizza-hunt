@@ -1,0 +1,23 @@
+{
+  "name": "pizza-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node -r tsconfig-paths/register src/bin/index.ts",
+    "scrape": "ts-node -r tsconfig-paths/register src/bin/puppeteer.ts"
+  },
+  "author": "Jakub Kozak",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server": "^2.3.2",
+    "graphql": "^14.1.1",
+    "puppeteer": "^1.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.9",
+    "ts-node": "^8.0.2",
+    "tsconfig-paths": "^3.7.0",
+    "typescript": "^3.2.4"
+  }
+}
