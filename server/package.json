@@ -15,6 +15,7 @@
     "puppeteer": "^1.11.0"
   },
   "devDependencies": {
+    "@types/puppeteer": "^1.11.2",
     "nodemon": "^1.18.9",
     "ts-node": "^8.0.2",
     "tsconfig-paths": "^3.7.0",

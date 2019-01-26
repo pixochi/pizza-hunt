@@ -15,11 +15,12 @@
     "paths": {
       "src/*": ["src/*"]
     },
-    "lib": ["es2016", "esnext.asynciterable"]
+    "lib": ["es2016", "esnext.asynciterable", "dom"]
   },
   "include": [
     "**/*.ts",
-    "**/*.json"
+    "**/*.json",
+    "node_modules/@types/puppeteer/index.d.ts"
   ],
   "exclude": [
     "node_modules"
