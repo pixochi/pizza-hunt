@@ -5,14 +5,19 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/bin/index.ts",
-    "scrape": "ts-node -r tsconfig-paths/register src/bin/puppeteer.ts"
+    "scrape": "ts-node -r tsconfig-paths/register src/bin/scraper/index.ts"
   },
   "author": "Jakub Kozak",
   "license": "ISC",
   "dependencies": {
     "apollo-server": "^2.3.2",
     "graphql": "^14.1.1",
-    "puppeteer": "^1.11.0"
+    "pg": "^7.8.0",
+    "puppeteer": "^1.11.0",
+    "type-graphql": "^0.16.0",
+    "typedi": "^0.8.0",
+    "typeorm": "^0.2.12",
+    "typeorm-typedi-extensions": "^0.2.3"
   },
   "devDependencies": {
     "@types/puppeteer": "^1.11.2",

@@ -1,5 +1,4 @@
-import puppeteer, { Page, Browser } from 'puppeteer';
-import fs from 'fs';
+import { Page, Browser } from 'puppeteer';
 
 interface Pizza {
   name: string;
@@ -15,15 +14,11 @@ interface Address {
   zipCode: string;
 }
 
-interface Rating {
-  reviewsTotal: number;
-  average: number;
-}
-
 interface PizzeriaInfo {
   name: string;
   address: Address;
-  rating: Rating;
+  ratingAverage: number;
+  reviewsTotal: number;
   minOrderPrice: number;
   minDeliveryTime: number; // in minutes
   pizzas: Pizza[];
@@ -31,7 +26,7 @@ interface PizzeriaInfo {
   // openingHours?: any; // Todo: save also opening hours
 }
 
-const getPizzeriaUrlsForCity = async (city: string, page: Page): Promise<string[]> => {
+export const getPizzeriaUrlsForCity = async (city: string, page: Page): Promise<string[]> => {
   await page.goto(`https://www.bistro.sk/donaska-pizza/${city}/`, {waitUntil: 'load', timeout: 0});
 
   const pizzeriaUrls = await page.evaluate(async () => {
@@ -45,7 +40,7 @@ const getPizzeriaUrlsForCity = async (city: string, page: Page): Promise<string[
   return pizzeriaUrls;
 };
 
-const getPizzeriaInfo = async (pizzeriaUrl: string, browser: Browser): Promise<PizzeriaInfo> => {
+export const getPizzeriaInfo = async (pizzeriaUrl: string, browser: Browser): Promise<PizzeriaInfo> => {
   const page = await browser.newPage();
   await page.goto(pizzeriaUrl, {timeout: 0});
 
@@ -61,7 +56,7 @@ const getPizzeriaInfo = async (pizzeriaUrl: string, browser: Browser): Promise<P
     }
 
     const reviewSection = document.querySelector('#rating');
-    const averageRating = parseFloat(reviewSection.querySelector('.grade > strong').textContent);
+    const ratingAverage = parseFloat(reviewSection.querySelector('.grade > strong').textContent);
     const reviewsTotal = parseInt(reviewSection.querySelector('.text > a').textContent);
 
     const deliverySection = infoSection.querySelector('.delivery');
@@ -69,7 +64,7 @@ const getPizzeriaInfo = async (pizzeriaUrl: string, browser: Browser): Promise<P
       deliverySection.querySelector('#minimal_price > strong').textContent.replace(',', '.')
     );
 
-    // parses number from ` od 75 min.`);
+    // parses number from ` od 75 min.`
     const deliveryTimeElement = deliverySection.querySelector('#delivery_time > strong');
     const deliveryTimeMatch = deliveryTimeElement && deliveryTimeElement.textContent.match(/.*\s(\d.)/);
     const minDeliveryTime = deliveryTimeMatch && parseInt(deliveryTimeMatch[1]);
@@ -111,10 +106,8 @@ const getPizzeriaInfo = async (pizzeriaUrl: string, browser: Browser): Promise<P
         zipCode,
         city,
       },
-      rating: {
-        average: averageRating,
-        reviewsTotal,
-      },
+      ratingAverage,
+      reviewsTotal,
       minOrderPrice,
       minDeliveryTime,
       pizzas,
@@ -125,22 +118,3 @@ const getPizzeriaInfo = async (pizzeriaUrl: string, browser: Browser): Promise<P
 
   return pizzeria;
 };
-
-(async () => {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-
-  const allPizzeriasInCityUrls = await getPizzeriaUrlsForCity('zilina', page);
-
-  const promises = allPizzeriasInCityUrls.map(async (url) => {
-    const info = await getPizzeriaInfo(url, browser);
-    return info;
-  });
-
-  const allPizzeriasInCity = await Promise.all(promises);
-
-  fs.writeFile('./results.json', JSON.stringify({pizzerias: allPizzeriasInCity}, null, 4), async () => {
-    await browser.close();
-  });
-
-})();

@@ -1,5 +1,7 @@
 import { ApolloServer, gql } from 'apollo-server';
 
+import { initDbConnection } from 'src/db-connection';
+
 // The GraphQL schema
 const typeDefs = gql`
   type Query {
@@ -20,6 +22,10 @@ const server = new ApolloServer({
   resolvers,
 });
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
-});
+(() => {
+  initDbConnection().then(() => {
+    server.listen().then(({ url }) => {
+      console.log(`🚀 Server ready at ${url}`);
+    });
+  });
+})();
