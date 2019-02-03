@@ -1,5 +1,5 @@
 import {Field, ID, ObjectType} from 'type-graphql';
-import {Entity, PrimaryGeneratedColumn, Column, ManyToMany, OneToMany} from 'typeorm';
+import {Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, ManyToOne} from 'typeorm';
 
 import Topping from 'src/entities/topping';
 import Allergen from 'src/entities/allergen';
@@ -26,14 +26,16 @@ export default class Pizza {
   price: number;
 
   @Field(() => Pizzeria)
-  @OneToMany(type => Pizzeria, pizzeria => pizzeria.pizzas)
+  @ManyToOne(type => Pizzeria, pizzeria => pizzeria.pizzas)
   pizzeria: Pizzeria;
 
   @Field(() => Topping)
-  @ManyToMany(type => Topping, topping => topping.pizzas)
+  @ManyToMany(type => Topping, topping => topping.pizzas, {cascade: ['insert']})
+  @JoinTable({name: 'pizza_topping'})
   toppings: Topping[];
 
   @Field(() => Allergen)
-  @ManyToMany(type => Allergen, allergen => allergen.pizzas)
+  @ManyToMany(type => Allergen, allergen => allergen.pizzas, {cascade: ['insert'], nullable: true})
+  @JoinTable({name: 'pizza_allergen'})
   allergens: Allergen[];
 }

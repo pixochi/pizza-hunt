@@ -1,5 +1,5 @@
-import {Field, ID, ObjectType} from 'type-graphql';
-import {Entity, PrimaryGeneratedColumn, Column, ManyToMany} from 'typeorm';
+import {Field, ObjectType, ID} from 'type-graphql';
+import {Entity, ManyToMany, PrimaryColumn, Column} from 'typeorm';
 
 import Pizza from 'src/entities/pizza';
 
@@ -8,14 +8,14 @@ import Pizza from 'src/entities/pizza';
 export default class Allergen {
 
   @Field(() => ID)
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   id: string;
 
   @Field()
-  @Column({length: 64})
-  name: string;
+  @Column()
+  title: string;
 
   @Field(() => Pizza)
-  @ManyToMany(type => Pizza, pizza => pizza.allergens)
+  @ManyToMany(() => Pizza, pizza => pizza.allergens)
   pizzas: Pizza[];
 }

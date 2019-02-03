@@ -26,6 +26,10 @@ interface PizzeriaInfo {
   // openingHours?: any; // Todo: save also opening hours
 }
 
+interface Allergen {
+  [id: string]: string; // {id: name}
+}
+
 export const getPizzeriaUrlsForCity = async (city: string, page: Page): Promise<string[]> => {
   await page.goto(`https://www.bistro.sk/donaska-pizza/${city}/`, {waitUntil: 'load', timeout: 0});
 
@@ -117,4 +121,26 @@ export const getPizzeriaInfo = async (pizzeriaUrl: string, browser: Browser): Pr
   await page.close();
 
   return pizzeria;
+};
+
+export const getAllergens = async (pizzeriaUrl: string, page: Page): Promise<Allergen> => {
+  await page.goto(pizzeriaUrl);
+  await page.click('.allergens_link');
+
+  const allergenModalSelector = '#allergensList.modal-window';
+  await page.waitForSelector(allergenModalSelector);
+
+  const allergens = await page.evaluate(async (allergenModalSelector) => {
+    const allergenListItemElements = document.querySelectorAll(`${allergenModalSelector} ol li`);
+
+    return Array.from(allergenListItemElements).reduce<Allergen>((acc, item, i) => {
+      acc[i + 1] = item.textContent; // `i + 1` because allergens in pizza menu starts at 1
+      return acc;
+    }, {});
+
+  }, allergenModalSelector); // pass `allergenModalSelector` to browser's scope
+
+  await page.close();
+
+  return allergens;
 };

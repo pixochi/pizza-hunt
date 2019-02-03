@@ -1,52 +1,79 @@
 import puppeteer from 'puppeteer';
-// import fs from 'fs';
-import Pizzeria from 'src/entities/pizzeria';
 
-import { getPizzeriaUrlsForCity, getPizzeriaInfo } from './helpers';
 import { initDbConnection } from 'src/db-connection';
+import Pizzeria from 'src/entities/pizzeria';
 import Pizza from 'src/entities/pizza';
+import Allergen from 'src/entities/allergen';
+import Topping from 'src/entities/topping';
+
+import { getPizzeriaUrlsForCity, getPizzeriaInfo, getAllergens } from './helpers';
 
 (async () => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-
-  const allPizzeriasInCityUrls = await getPizzeriaUrlsForCity('zilina', page);
-
-  const promises = allPizzeriasInCityUrls.map(async (url) => {
-    const info = await getPizzeriaInfo(url, browser);
-    return info;
-  });
-
-  const allPizzeriasInCity = await Promise.all(promises);
-  browser.close();
   const dbConnection = await initDbConnection();
 
-  // fs.writeFile('./results.json', JSON.stringify({pizzerias: allPizzeriasInCity}, null, 4), async () => {
-        const allPizzeriaRecords: Pizzeria[] = [];
+  const allPizzeriasInCityUrls = await getPizzeriaUrlsForCity('zilina', page);
+  const aPage = await browser.newPage();
+  const pizzaAllergens = await getAllergens(allPizzeriasInCityUrls[0], aPage);
 
-        allPizzeriasInCity.map(pizzeriaInfo => {
-          let pizzeria = new Pizzeria();
-          pizzeria.name = pizzeriaInfo.name;
-          pizzeria.minDeliveryTime = pizzeriaInfo.minDeliveryTime;
-          pizzeria.minOrderPrice = pizzeriaInfo.minOrderPrice;
-          pizzeria.ratingAverage = pizzeriaInfo.ratingAverage;
-          pizzeria.reviewsTotal = pizzeriaInfo.reviewsTotal;
-          pizzeria.pizzas = pizzeriaInfo.pizzas.map(pizza => {
-            const pizzaRecord = new Pizza();
-            pizzaRecord.name = pizza.name;
-            pizzaRecord.price = pizza.price;
-            pizzaRecord.weight = pizza.weight;
-            return pizzaRecord;
-          });
-          allPizzeriaRecords.push(pizzeria);
+  const allergenRecords = Object.keys(pizzaAllergens).map(allergenId => {
+    const allergenRecord = new Allergen();
+    allergenRecord.id = allergenId;
+    allergenRecord.title = pizzaAllergens[allergenId];
+    return allergenRecord;
+  });
+
+  await dbConnection.manager.save(allergenRecords);
+  console.log('Allergens have been saved.');
+
+  const promises = allPizzeriasInCityUrls.slice(0, 10).map(async (url) => {
+    return await getPizzeriaInfo(url, browser);
+  });
+  const allPizzeriasInCity = await Promise.all(promises);
+  browser.close();
+
+  const allPizzeriaRecords: Pizzeria[] = [];
+
+  allPizzeriasInCity.map(pizzeriaInfo => {
+    const pizzeriaRecord = new Pizzeria();
+    pizzeriaRecord.name = pizzeriaInfo.name;
+    pizzeriaRecord.minDeliveryTime = pizzeriaInfo.minDeliveryTime;
+    pizzeriaRecord.minOrderPrice = pizzeriaInfo.minOrderPrice;
+    pizzeriaRecord.ratingAverage = pizzeriaInfo.ratingAverage;
+    pizzeriaRecord.reviewsTotal = pizzeriaInfo.reviewsTotal;
+
+    pizzeriaRecord.pizzas = pizzeriaInfo.pizzas.map(pizza => {
+      const pizzaRecord = new Pizza();
+      pizzaRecord.name = pizza.name;
+      pizzaRecord.price = pizza.price;
+      pizzaRecord.weight = pizza.weight;
+
+      pizzaRecord.allergens = pizza.allergens.map(allergenId => {
+        const allergenRecord = new Allergen();
+        allergenRecord.id = allergenId;
+        allergenRecord.title = pizzaAllergens[allergenId];
+        return allergenRecord;
+      });
+
+      pizzaRecord.toppings = [...new Set(pizza.toppings)] // get only unique toppings
+        .filter(topping => topping && topping.length <= 64)
+        .map(topping => {
+          const toppingRecord = new Topping();
+          toppingRecord.name = topping;
+          return toppingRecord;
         });
 
-        return dbConnection.manager
-          .save(allPizzeriaRecords)
-          .then(result => {
-              console.log('Pizzerias have been saved.', result);
-          });
+        return pizzaRecord;
+      });
 
-  // });
+      allPizzeriaRecords.push(pizzeriaRecord);
+  });
+
+  return dbConnection.manager
+    .save(allPizzeriaRecords)
+    .then(() => {
+        console.log('Pizzerias have been saved.');
+    });
 
 })();
