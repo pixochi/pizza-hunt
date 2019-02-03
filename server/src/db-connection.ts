@@ -10,8 +10,8 @@ TypeORM.useContainer(Container);
 export const initDbConnection = (): Promise<TypeORM.Connection> => (
   TypeORM.createConnection({
     type: 'postgres',
-    host: 'localhost',
-    port: 5432, // default PostgresQL port
+    host: '192.168.99.100',
+    port: 5433,
     username: 'postgres', // default PostgresQL user
     password: process.env.PGPASSWORD,
     database: 'pizzahuntdb', // You need to create this db locally
