@@ -16,11 +16,11 @@ export default class Pizzeria {
   name: string;
 
   @Field()
-  @Column('numeric', {precision: 4, scale: 2})
+  @Column('numeric', {precision: 4, scale: 2, nullable: true})
   ratingAverage: number;
 
   @Field()
-  @Column('int4')
+  @Column('int4', {nullable: true})
   reviewsTotal: number;
 
   @Field()
@@ -30,6 +30,18 @@ export default class Pizzeria {
   @Field()
   @Column('int2', {nullable: true})
   minDeliveryTime: number;
+
+  @Field()
+  @Column({length: 128, nullable: true})
+  street: string;
+
+  @Field()
+  @Column({nullable: true})
+  zipCode: string;
+
+  @Field()
+  @Column({length: 128, nullable: true})
+  city: string;
 
   @Field(() => Pizza)
   @OneToMany(type => Pizza, pizza => pizza.pizzeria, {cascade: true})

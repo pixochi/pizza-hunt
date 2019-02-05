@@ -13,7 +13,7 @@ import { getPizzeriaUrlsForCity, getPizzeriaInfo, getAllergens } from './helpers
   const page = await browser.newPage();
   const dbConnection = await initDbConnection();
 
-  const allPizzeriasInCityUrls = await getPizzeriaUrlsForCity('zilina', page);
+  const allPizzeriasInCityUrls = await getPizzeriaUrlsForCity('bratislava', page);
   const aPage = await browser.newPage();
   const pizzaAllergens = await getAllergens(allPizzeriasInCityUrls[0], aPage);
 
@@ -27,7 +27,7 @@ import { getPizzeriaUrlsForCity, getPizzeriaInfo, getAllergens } from './helpers
   await dbConnection.manager.save(allergenRecords);
   console.log('Allergens have been saved.');
 
-  const promises = allPizzeriasInCityUrls.slice(0, 10).map(async (url) => {
+  const promises = allPizzeriasInCityUrls.slice(0, 15).map(async (url) => {
     return await getPizzeriaInfo(url, browser);
   });
   const allPizzeriasInCity = await Promise.all(promises);
@@ -35,13 +35,16 @@ import { getPizzeriaUrlsForCity, getPizzeriaInfo, getAllergens } from './helpers
 
   const allPizzeriaRecords: Pizzeria[] = [];
 
-  allPizzeriasInCity.map(pizzeriaInfo => {
+  allPizzeriasInCity.filter(p => p).map(pizzeriaInfo => {
     const pizzeriaRecord = new Pizzeria();
     pizzeriaRecord.name = pizzeriaInfo.name;
     pizzeriaRecord.minDeliveryTime = pizzeriaInfo.minDeliveryTime;
     pizzeriaRecord.minOrderPrice = pizzeriaInfo.minOrderPrice;
     pizzeriaRecord.ratingAverage = pizzeriaInfo.ratingAverage;
     pizzeriaRecord.reviewsTotal = pizzeriaInfo.reviewsTotal;
+    pizzeriaRecord.city = pizzeriaInfo.address.city;
+    pizzeriaRecord.zipCode = pizzeriaInfo.address.zipCode;
+    pizzeriaRecord.street = pizzeriaInfo.address.street;
 
     pizzeriaRecord.pizzas = pizzeriaInfo.pizzas.map(pizza => {
       const pizzaRecord = new Pizza();
